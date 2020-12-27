@@ -5,16 +5,16 @@ import (
 	"net/http"
 )
 
-// Goodbye is ...
+// Goodbye is
 type Goodbye struct {
 	l *log.Logger
 }
 
+// NewGoodbye return Goodbye Instance
 func NewGoodbye(l *log.Logger) *Goodbye {
 	return &Goodbye{l}
 }
 
-func (g *Goodbye) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	// log in Hello Scope
-	rw.Write([]byte("Byeee!"))
+func (g *Goodbye) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Byeee!"))
 }
