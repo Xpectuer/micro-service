@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -19,12 +21,22 @@ func main() {
 	Serve Mux  is a map spcifies
 	the routers and handler funcs
 	*/
-	sm := http.NewServeMux()
-
+	sm := mux.NewRouter()
 	log.Println("Registering Handlers... ")
-	sm.Handle("/", ph)
+	//sm.Handle("/products", ph)
+	// In go public function started with Capital letter
+
+	getRouter := sm.Methods(http.MethodGet).Subrouter()
+	getRouter.HandleFunc("/", ph.GetProducts)
+
+	putRouter := sm.Methods(http.MethodPut).Subrouter()
+	putRouter.HandleFunc("/{id:[0-9]+}", ph.UpdateProducts)
+
+	postRouter := sm.Methods(http.MethodPost).Subrouter()
+	postRouter.HandleFunc("/", ph.AddProducts)
+	postRouter.Use(ph.MiddlewareProductValidation)
+	// sm.Handle("/", ph)
 	// sm.Handle("/goodbye", gh)
-	// sm.Handle("/products", ph)
 
 	s := &http.Server{
 		Addr:        ":9091",

@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"my-simple-server/data"
 	"net/http"
-	"regexp"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 // Products is
@@ -18,56 +21,11 @@ func NewProducts(l *log.Logger) *Products {
 	return &Products{l}
 }
 
-// Convert list of Product into JSON
-func (p *Products) ServeHTTP(w http.ResponseWriter, h *http.Request) {
-	if h.Method == http.MethodGet {
-		p.getProducts(w, h)
-		return
-	}
+// GetProducts gets the products from list
+func (p *Products) GetProducts(rw http.ResponseWriter, h *http.Request) {
+	p.l.Println("Handle GET Products")
 
-	if h.Method == http.MethodPost {
-		p.AddProduct(w, h)
-		return
-	}
-
-	if h.Method == http.MethodPut {
-
-		// expect ID from URI
-		// use regex to extract path variables
-		p.l.Println(h.URL.Path)
-		r := regexp.MustCompile(`/([0-9]+)`)
-		g := r.FindAllStringSubmatch(h.URL.Path, -1)
-
-		if len(g) != 1 {
-			p.l.Println("Result group captured more than one!")
-			http.Error(w, "Invalid URI", http.StatusBadRequest)
-			return
-		}
-		if len(g[0]) != 2 {
-			p.l.Println("id")
-			http.Error(w, "Invalid URI", http.StatusBadRequest)
-			return
-		}
-
-		idString := g[0][1]
-		id, err := strconv.Atoi(idString)
-		if err != nil {
-			http.Error(w, "Unable to convert id into integer", http.StatusBadRequest)
-			return
-		}
-		p.l.Println("got id", id)
-		p.UpdateProduct(id, w, h)
-		return
-
-	}
-	// handle and update
-	// catch all
-	w.WriteHeader(http.StatusMethodNotAllowed)
-}
-
-func (p *Products) getProducts(rw http.ResponseWriter, h *http.Request) {
 	lp := data.GetProducts()
-
 	/**
 	* Why not use encoder	?
 	* The func Encode() writes the json string directly into
@@ -83,23 +41,34 @@ func (p *Products) getProducts(rw http.ResponseWriter, h *http.Request) {
 
 }
 
-// AddProduct is a method to create new product resource
-func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
+// AddProducts is a method to create new product resource
+func (p *Products) AddProducts(rw http.ResponseWriter, r *http.Request) {
 	p.l.Println("Handle POST Products")
 
 	// What if the body data is too Huge for Reader
-	prod := &data.Product{}
-	err := prod.FromJSON(r.Body)
-	if err != nil {
-		http.Error(rw, "Unable to Unmarshal json", http.StatusBadRequest)
-	}
-	p.l.Printf("Prod: %#v", prod)
+	// prod := &data.Product{}
+	// err := prod.FromJSON(r.Body)
+	// if err != nil {
+	// 	http.Error(rw, "Unable to Unmarshal json", http.StatusBadRequest)
+	// 	return
+	// }
+	// p.l.Printf("Prod: %#v", prod)
+
+	// reflect the object
+	prod := r.Context().Value(KeyProduct{}).(*data.Product)
+	p.l.Println(prod)
+	// pass a REF
 	data.AddProduct(prod)
 }
 
-// UpdateProduct is a method let user to update the product with specified
-func (p *Products) UpdateProduct(id int, rw http.ResponseWriter, r *http.Request) {
+// UpdateProducts is a method let user to update the product with specified
+func (p *Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
 	p.l.Println("Handle PUT Products")
+	vars := mux.Vars(r)
+	id, er := strconv.Atoi(vars["id"])
+	if er != nil {
+		http.Error(rw, "Unable to Convert Id", http.StatusBadRequest)
+	}
 
 	// What if the body data is too Huge for Reader
 	prod := &data.Product{}
@@ -118,4 +87,43 @@ func (p *Products) UpdateProduct(id int, rw http.ResponseWriter, r *http.Request
 		return
 	}
 
+}
+
+// KeyProduct Used as a key in context
+type KeyProduct struct{}
+
+// MiddlewareProductValidation will execute
+// before the acutual handler called
+// Just like Spring-AOP
+func (p *Products) MiddlewareProductValidation(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		// What if the body data is too Huge for Reader
+		p.l.Printf("Validating the Product Data")
+		prod := &data.Product{}
+		err := prod.FromJSON(r.Body)
+		if err != nil {
+			p.l.Println("[ERROR] Deserializing product", err)
+			http.Error(rw, "Unable to Unmarshal json", http.StatusBadRequest)
+			return
+		}
+
+		p.l.Println(prod)
+
+		err = prod.Validate()
+		if err != nil {
+			p.l.Println("[ERROR] Validating Product", err)
+			http.Error(
+				rw,
+				fmt.Sprintf("Invalid JSON Object: %s", err),
+				http.StatusBadRequest)
+			return
+		}
+		// reflect
+		ctx := context.WithValue(r.Context(), KeyProduct{}, prod)
+		// update the request
+		r = r.WithContext(ctx)
+		// Call the next hanlder, which can be another middleware the chain
+		next.ServeHTTP(rw, r)
+
+	})
 }
