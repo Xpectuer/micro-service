@@ -13,11 +13,10 @@ import (
 	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
-	"my-simple-server/data"
-	"my-simple-server/handlers"
+	"github.com/Xpectuer/mircro-service/my-simple-server/data"
+	"github.com/Xpectuer/mircro-service/my-simple-server/handlers"
 
 	"github.com/nicholasjackson/env"
-	"google.golang.org/grpc/protos"
 )
 
 var bindAddress = env.String("BIND_ADDRESS", false, ":9092", "Bind adress for the server")
@@ -29,19 +28,20 @@ func main() {
 	v := data.NewValidation()
 	//hh := handlers.NewHello(l)
 	//gh := handlers.NewGoodbye(l)
-	ph := handlers.NewProducts(l, v)
 
-	conn, err := grpc.Dial("localhost:9093")
-	if err != nil {
-		panic(err)
-	}
-	defer conn.Close()
+//	ph := handlers.NewProducts(l, v)
+
+	// conn, err := grpc.Dial("localhost:9093")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer conn.Close()
 
 	// create client
-	cc := protos.NewCurrencyClient(conn)
+	//cc := protos.NewCurrencyClient(conn)
 
 	//create Handlers (constructor styled injection)
-	ph := handlers.NewHandlers(l, v, cc)
+	ph := handlers.NewHandlers(l, v)
 	/**
 	Serve Mux  is a map spcifies
 	the routers and handler funcs

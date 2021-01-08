@@ -3,7 +3,7 @@ package handlers
 // MiddlewareProductValidation will execute
 import (
 	"context"
-	"my-simple-server/data"
+	"github.com/Xpectuer/mircro-service/my-simple-server/data"
 	"net/http"
 )
 

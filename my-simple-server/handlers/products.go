@@ -3,10 +3,10 @@ package handlers
 import (
 	"log"
 
-	"my-simple-server/data"
+	"github.com/Xpectuer/mircro-service/my-simple-server/data"
 	"net/http"
 	"strconv"
-	protos "github.com/Xpectuer/mircro-service/tree/gorilla_version/currency"
+	//protos "github.com/Xpectuer/mircro-service/tree/gorilla_version/currency"
 	"github.com/gorilla/mux"
 )
 
@@ -14,7 +14,7 @@ import (
 type Products struct {
 	l  *log.Logger
 	v  *data.Validation
-	cc protos.CurrencyClient
+	//cc protos.CurrencyClient
 }
 
 // KeyProduct Used as a key in context

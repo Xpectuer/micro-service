@@ -3,7 +3,7 @@ package handlers
 /*package is really important for swagger */
 // GetProducts gets the products from list
 import (
-	"my-simple-server/data"
+	"github.com/Xpectuer/mircro-service/my-simple-server/data"
 	"net/http"
 )
 
