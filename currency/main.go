@@ -4,7 +4,8 @@ import (
 	"net"
 	"os"
 
-	protos "currency/protos/currency"
+	protos "github.com/Xpectuer/mircro-service/currency/proto/currency"
+
 	"currency/server"
 
 	hclog "github.com/hashicorp/go-hclog"
