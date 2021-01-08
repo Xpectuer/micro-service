@@ -1,4 +1,4 @@
-module my-simple-server
+module github.com/Xpectuer/mircro-service/my-simple-server
 
 go 1.15
 

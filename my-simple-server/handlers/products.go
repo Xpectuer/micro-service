@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"log"
-	protos "currency/currency"
+
 	"my-simple-server/data"
 	"net/http"
 	"strconv"
-
+	protos "github.com/Xpectuer/mircro-service/tree/gorilla_version/currency"
 	"github.com/gorilla/mux"
 )
 
