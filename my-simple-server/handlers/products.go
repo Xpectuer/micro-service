@@ -1,9 +1,8 @@
 package handlers
 
 import (
-	"context"
-	"fmt"
 	"log"
+	protos "currency/currency"
 	"my-simple-server/data"
 	"net/http"
 	"strconv"
@@ -11,119 +10,45 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Products is
+// Products is just products
 type Products struct {
-	l *log.Logger
-}
-
-// NewProducts is
-func NewProducts(l *log.Logger) *Products {
-	return &Products{l}
-}
-
-// GetProducts gets the products from list
-func (p *Products) GetProducts(rw http.ResponseWriter, h *http.Request) {
-	p.l.Println("Handle GET Products")
-
-	lp := data.GetProducts()
-	/**
-	* Why not use encoder	?
-	* The func Encode() writes the json string directly into
-	* the stream
-	* Encode() is faster than Marshal
-	 */
-	//d, err := json.Marshal(lp)
-	err := lp.ToJSON(rw)
-	if err != nil {
-		http.Error(rw, "Unable to marshal json ", http.StatusInternalServerError)
-	}
-	//w.Write(d)
-
-}
-
-// AddProducts is a method to create new product resource
-func (p *Products) AddProducts(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handle POST Products")
-
-	// What if the body data is too Huge for Reader
-	// prod := &data.Product{}
-	// err := prod.FromJSON(r.Body)
-	// if err != nil {
-	// 	http.Error(rw, "Unable to Unmarshal json", http.StatusBadRequest)
-	// 	return
-	// }
-	// p.l.Printf("Prod: %#v", prod)
-
-	// reflect the object
-	prod := r.Context().Value(KeyProduct{}).(*data.Product)
-	p.l.Println(prod)
-	// pass a REF
-	data.AddProduct(prod)
-}
-
-// UpdateProducts is a method let user to update the product with specified
-func (p *Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handle PUT Products")
-	vars := mux.Vars(r)
-	id, er := strconv.Atoi(vars["id"])
-	if er != nil {
-		http.Error(rw, "Unable to Convert Id", http.StatusBadRequest)
-	}
-
-	// What if the body data is too Huge for Reader
-	prod := &data.Product{}
-	err := prod.FromJSON(r.Body)
-	if err != nil {
-		http.Error(rw, "Unable to Unmarshal json", http.StatusBadRequest)
-	}
-	p.l.Printf("Prod: %#v", prod)
-	e := data.UpdateProduct(id, prod)
-	if e == data.ErrProductNotFound {
-		http.Error(rw, "Product not found", http.StatusNotFound)
-		return
-	}
-	if e != nil {
-		http.Error(rw, "Product not found", http.StatusInternalServerError)
-		return
-	}
-
+	l  *log.Logger
+	v  *data.Validation
+	cc protos.CurrencyClient
 }
 
 // KeyProduct Used as a key in context
 type KeyProduct struct{}
 
-// MiddlewareProductValidation will execute
-// before the acutual handler called
-// Just like Spring-AOP
-func (p *Products) MiddlewareProductValidation(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		// What if the body data is too Huge for Reader
-		p.l.Printf("Validating the Product Data")
-		prod := &data.Product{}
-		err := prod.FromJSON(r.Body)
-		if err != nil {
-			p.l.Println("[ERROR] Deserializing product", err)
-			http.Error(rw, "Unable to Unmarshal json", http.StatusBadRequest)
-			return
-		}
+// NewProducts is
+func NewProducts(l *log.Logger, v *data.Validation) *Products {
+	return &Products{l, v}
+}
 
-		p.l.Println(prod)
+// GenericError is a generic error message returned by a server
+type GenericError struct {
+	Message string `json:"message"`
+}
 
-		err = prod.Validate()
-		if err != nil {
-			p.l.Println("[ERROR] Validating Product", err)
-			http.Error(
-				rw,
-				fmt.Sprintf("Invalid JSON Object: %s", err),
-				http.StatusBadRequest)
-			return
-		}
-		// reflect
-		ctx := context.WithValue(r.Context(), KeyProduct{}, prod)
-		// update the request
-		r = r.WithContext(ctx)
-		// Call the next hanlder, which can be another middleware the chain
-		next.ServeHTTP(rw, r)
+// ValidationError is a collection of validation error messages
+type ValidationError struct {
+	Messages []string `json:"messages"`
+}
 
-	})
+// getProductID returns the product ID from the URL
+// Panics if cannot convert the id into an integer
+// this should never happen as the router ensures that
+// this is a valid number
+func getProductID(r *http.Request) int {
+	// parse the product id from the url
+	vars := mux.Vars(r)
+
+	// convert the id into an integer and return
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		// should never happen
+		panic(err)
+	}
+
+	return id
 }
