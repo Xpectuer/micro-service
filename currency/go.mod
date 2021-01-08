@@ -1,4 +1,4 @@
-module github.com/Xpectuer/mircro-service/currency
+module github.com/Xpectuer/micro-service/currency
 
 go 1.15
 

@@ -4,9 +4,9 @@ import (
 	"net"
 	"os"
 
-	protos "github.com/Xpectuer/mircro-service/currency/proto/currency"
+	protos "github.com/Xpectuer/micro-service/currency/protos/currency"
 
-	"currency/server"
+	"github.com/Xpectuer/micro-service/currency/server"
 
 	hclog "github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
