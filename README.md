@@ -1,4 +1,4 @@
-# mircro-service
+# micro-service
 
 This is a Go Microservice Project for Learning.
 

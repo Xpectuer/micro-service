@@ -15,7 +15,7 @@
 // swagger:meta
 package handlers
 
-import "github.com/Xpectuer/mircro-service/my-simple-server/data"
+import "github.com/Xpectuer/micro-service/my-simple-server/data"
 
 //
 // NOTE: Types defined here are purely for documentation purposes

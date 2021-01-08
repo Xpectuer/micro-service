@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/Xpectuer/mircro-service/my-simple-server/data"
+	"github.com/Xpectuer/micro-service/my-simple-server/data"
 	"net/http"
 )
 
