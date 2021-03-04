@@ -1,8 +1,18 @@
 package handlers
 
+/*
+ * @Author: your name
+ * @Date: 2020-12-28 21:46:29
+ * @LastEditTime: 2021-01-26 17:44:53
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: /micro-service/my-simple-server/handlers/update.go
+ */
+
 import (
-	"github.com/Xpectuer/micro-service/my-simple-server/data"
 	"net/http"
+
+	"github.com/Xpectuer/micro-service/my-simple-server/data"
 )
 
 // swagger:route PUT /products products updateProduct
@@ -15,7 +25,7 @@ import (
 
 // UpdateProducts is a method let user to update the product with specified
 func (p *Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handle PUT Products")
+	p.l.Info("Handling PUT Products")
 
 	// What if the body data is too Huge for Reader
 	prod := r.Context().Value(KeyProduct{}).(*data.Product)
@@ -23,8 +33,8 @@ func (p *Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(rw, "Unable to Unmarshal json", http.StatusBadRequest)
 	}
-	p.l.Printf("Prod: %#v", prod)
-	e := data.UpdateProduct(prod)
+	p.l.Debug("Prod: ", prod)
+	e := p.productDB.UpdateProduct(*prod)
 	if e == data.ErrProductNotFound {
 		http.Error(rw, "Product not found", http.StatusNotFound)
 		return

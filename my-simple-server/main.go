@@ -8,10 +8,12 @@ import (
 	"os"
 	"os/signal"
 	"time"
+
 	// alias for handlers
 	"github.com/go-openapi/runtime/middleware"
 	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/hashicorp/go-hclog"
 
 	"github.com/Xpectuer/micro-service/my-simple-server/data"
 	"github.com/Xpectuer/micro-service/my-simple-server/handlers"
@@ -26,14 +28,10 @@ var bindAddress = env.String("BIND_ADDRESS", false, ":9092", "Bind adress for th
 func main() {
 	env.Parse()
 
-	l := log.New(os.Stdout, "product-api", log.LstdFlags)
+	l := hclog.Default()
 	v := data.NewValidation()
-	//hh := handlers.NewHello(l)
-	//gh := handlers.NewGoodbye(l)
 
-	//	ph := handlers.NewProducts(l, v)
-
-	conn, err := grpc.Dial("localhost:9093")
+	conn, err := grpc.Dial("localhost:9093", grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
@@ -41,9 +39,9 @@ func main() {
 
 	// create client
 	cc := protos.NewCurrencyClient(conn)
-
+	db := data.NewProductsDB(cc, l)
 	//create Handlers (constructor styled injection)
-	ph := handlers.NewProducts(l, v, cc)
+	ph := handlers.NewProducts(l, v, db)
 	/**
 	Serve Mux  is a map spcifies
 	the routers and handler funcs
@@ -54,6 +52,8 @@ func main() {
 	// In go public function started with Capital letter
 
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
+	// Fetch Get matched parameter
+	getRouter.HandleFunc("/products", ph.GetProducts).Queries("/currency", "[A-Z]{3}")
 	getRouter.HandleFunc("/products", ph.GetProducts)
 	getRouter.HandleFunc("/products/{id:[0-9]+}", ph.ListSingleProduct)
 
@@ -90,7 +90,7 @@ func main() {
 	go func() {
 		err := s.ListenAndServe()
 		if err != nil {
-			l.Fatal(err)
+			l.Error("Initiating Error: ", err)
 		}
 	}()
 	// specifies the channel
@@ -101,7 +101,7 @@ func main() {
 	signal.Notify(sigChan, os.Kill)
 	// consume
 	sig := <-sigChan
-	l.Println("Received terminate, gracefully shutdown", sig)
+	l.Info("Received terminate, gracefully shutdown", sig)
 
 	// allow handlers to gracefully shutdown in 30s
 	// after 30s , forcefully close it

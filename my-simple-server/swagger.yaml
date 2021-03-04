@@ -1,25 +1,18 @@
-basePath: /
-consumes:
-- application/json
 definitions:
   GenericError:
-    description: GenericError GenericError is a generic error message returned by
-      a server
+    description: GenericError is a generic error message returned by a server
     properties:
       message:
-        description: message
         type: string
         x-go-name: Message
     type: object
-    x-go-package: my-simple-server/client/models
+    x-go-package: github.com/Xpectuer/micro-service/my-simple-server/handlers
   Product:
-    description: Product Product defines the structure for an API product
+    description: Product defines the structure for an API product
     properties:
       CreatedOn:
-        description: created on
         type: string
       UpdatedOn:
-        description: updated on
         type: string
       description:
         description: the description for this poduct
@@ -39,7 +32,7 @@ definitions:
         x-go-name: Name
       price:
         description: the price for the product
-        format: float
+        format: double
         minimum: 0.01
         type: number
         x-go-name: Price
@@ -53,28 +46,30 @@ definitions:
     - price
     - sku
     type: object
-    x-go-package: my-simple-server/client/models
+    x-go-package: github.com/Xpectuer/micro-service/my-simple-server/data
   ValidationError:
-    description: ValidationError ValidationError is a collection of validation error
-      messages
+    description: ValidationError is a collection of validation error messages
     properties:
       messages:
-        description: messages
         items:
           type: string
         type: array
         x-go-name: Messages
     type: object
-    x-go-package: my-simple-server/client/models
-info:
-  description: Documentation for Product API
-  title: of Product API
-  version: 1.0.0
+    x-go-package: github.com/Xpectuer/micro-service/my-simple-server/handlers
+info: {}
 paths:
   /products:
     get:
       description: Return a list of Products
       operationId: listProducts
+      parameters:
+      - description: |-
+          Currency used when returning the price of the product.
+          when not specify currency is returned in GBP
+        in: query
+        name: Currency
+        type: string
       responses:
         "200":
           $ref: '#/responses/productsResponse'
@@ -161,8 +156,6 @@ paths:
           $ref: '#/responses/errorResponse'
       tags:
       - products
-produces:
-- application/json
 responses:
   errorResponse:
     description: Generic error message returned as a string
@@ -184,6 +177,4 @@ responses:
       items:
         $ref: '#/definitions/Product'
       type: array
-schemes:
-- http
 swagger: "2.0"

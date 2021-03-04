@@ -1,29 +1,36 @@
 package handlers
 
-import (
-	"log"
+/*
+ * @Author: your name
+ * @Date: 2020-12-16 00:13:09
+ * @LastEditTime: 2021-01-26 17:44:15
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: /micro-service/my-simple-server/handlers/products.go
+ */
 
+import (
 	"net/http"
 	"strconv"
 
-	protos "github.com/Xpectuer/micro-service/currency/protos/currency"
 	"github.com/Xpectuer/micro-service/my-simple-server/data"
 	"github.com/gorilla/mux"
+	hclog "github.com/hashicorp/go-hclog"
 )
 
 // Products is just products
 type Products struct {
-	l  *log.Logger
-	v  *data.Validation
-	cc protos.CurrencyClient
+	l         hclog.Logger
+	v         *data.Validation
+	productDB *data.ProductsDB
 }
 
 // KeyProduct Used as a key in context
 type KeyProduct struct{}
 
 // NewProducts is
-func NewProducts(l *log.Logger, v *data.Validation) *Products {
-	return &Products{l, v}
+func NewProducts(l hclog.Logger, v *data.Validation, productDB *data.ProductsDB) *Products {
+	return &Products{l, v, productDB}
 }
 
 // GenericError is a generic error message returned by a server

@@ -1,10 +1,19 @@
+/*
+ * @Author: your name
+ * @Date: 2020-12-28 23:33:40
+ * @LastEditTime: 2021-01-20 19:41:11
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: /micro-service/my-simple-server/handlers/middleware.go
+ */
 package handlers
 
 // MiddlewareProductValidation will execute
 import (
 	"context"
-	"github.com/Xpectuer/micro-service/my-simple-server/data"
 	"net/http"
+
+	"github.com/Xpectuer/micro-service/my-simple-server/data"
 )
 
 // MiddlewareProductValidation called before the acutual handler called
@@ -15,7 +24,7 @@ func (p *Products) MiddlewareProductValidation(next http.Handler) http.Handler {
 
 		err := data.FromJSON(prod, r.Body)
 		if err != nil {
-			p.l.Println("[ERROR] deserializing product", err)
+			p.l.Error("Unable to deserializing product", err)
 
 			rw.WriteHeader(http.StatusBadRequest)
 			data.ToJSON(&GenericError{Message: err.Error()}, rw)
@@ -25,7 +34,7 @@ func (p *Products) MiddlewareProductValidation(next http.Handler) http.Handler {
 		// validate the product
 		errs := p.v.Validate(prod)
 		if len(errs) != 0 {
-			p.l.Println("[ERROR] validating product", errs)
+			p.l.Error("Unable to validating product", errs)
 
 			// return the validation messages as an array
 			rw.WriteHeader(http.StatusUnprocessableEntity)

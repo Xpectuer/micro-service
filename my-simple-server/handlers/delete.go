@@ -1,8 +1,14 @@
 package handlers
 
+/*
+ * @Author: XPectuer
+ * @LastEditor: XPectuer
+ */
+
 import (
-	"github.com/Xpectuer/micro-service/my-simple-server/data"
 	"net/http"
+
+	"github.com/Xpectuer/micro-service/my-simple-server/data"
 )
 
 // swagger:route DELETE /products/{id} products DeleteProduct
@@ -14,24 +20,25 @@ import (
 
 //DeleteProduct handles DELETE requests and removes items from the database
 func (p *Products) DeleteProduct(rw http.ResponseWriter, r *http.Request) {
-	//id := getProductID(r)
-	id := 0
-	p.l.Println("[DEBUG] deleting record id", id)
 
-	err := data.DeleteProduct(id)
+	rw.Header().Add("Content-Type", "application/json")
+	id := getProductID(r)
+	p.l.Debug("deleting record", "id", id)
+
+	err := p.productDB.DeleteProduct(id)
 	if err == data.ErrProductNotFound {
-		p.l.Println("[ERROR] deleting record id does not exist")
+		p.l.Debug("deleting record id does not exist")
 
 		rw.WriteHeader(http.StatusNotFound)
-		//data.ToJSON(rw)
+		data.ToJSON(&GenericError{Message: err.Error()}, rw)
 		return
 	}
 
 	if err != nil {
-		p.l.Println("[ERROR] deleting record", err)
+		p.l.Error("deleting record", err)
 
 		rw.WriteHeader(http.StatusInternalServerError)
-		//data.ToJSON(rw)
+		data.ToJSON(&GenericError{Message: err.Error()}, rw)
 		return
 	}
 

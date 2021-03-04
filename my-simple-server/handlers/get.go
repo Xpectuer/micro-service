@@ -1,10 +1,27 @@
+/*
+ * @Author: your name
+ * @Date: 2020-12-28 21:46:12
+ * @LastEditTime: 2021-01-20 20:16:53
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: /micro-service/my-simple-server/handlers/get.go
+ */
+/*
+ * @Author: your name
+ * @Date: 2020-12-28 21:46:12
+ * @LastEditTime: 2021-01-20 19:36:36
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: /micro-service/my-simple-server/handlers/get.go
+ */
 package handlers
 
 /*package is really important for swagger */
 // GetProducts gets the products from list
 import (
-	"github.com/Xpectuer/micro-service/my-simple-server/data"
 	"net/http"
+
+	"github.com/Xpectuer/micro-service/my-simple-server/data"
 )
 
 // swagger:route GET /products products listProducts
@@ -14,11 +31,14 @@ import (
 
 // GetProducts return a list of products
 func (p *Products) GetProducts(rw http.ResponseWriter, h *http.Request) {
-	p.l.Println("[DEBUG]Handle GET Products")
-
+	p.l.Debug("Handle GET Products")
+	cur := h.URL.Query().Get("currency")
 	rw.Header().Add("Content-Type", "application/json")
 
-	lp := data.GetProducts()
+	prods, err := p.productDB.GetProducts(cur)
+	if err != nil {
+		p.l.Error("Unable to getProducts")
+	}
 	/**
 	* Why not use encoder	?
 	* The func Encode() writes the json string directly into
@@ -26,9 +46,10 @@ func (p *Products) GetProducts(rw http.ResponseWriter, h *http.Request) {
 	* Encode() is faster than Marshal
 	 */
 	//d, err := json.Marshal(lp)
-	err := data.ToJSON(lp, rw)
+	err = data.ToJSON(prods, rw)
 	if err != nil {
-		http.Error(rw, "Unable to marshal json ", http.StatusInternalServerError)
+		p.l.Error("Uable to serialize product", "error", err)
+
 	}
 	//w.Write(d)
 
@@ -44,30 +65,30 @@ func (p *Products) GetProducts(rw http.ResponseWriter, h *http.Request) {
 func (p *Products) ListSingleProduct(rw http.ResponseWriter, r *http.Request) {
 	id := getProductID(r)
 
-	p.l.Println("[DEBUG] get record id", id)
+	p.l.Debug("get record id", id)
 
-	prod, err := data.GetProductByID(id)
+	cur := r.URL.Query().Get("currency")
+	prod, err := p.productDB.GetProductByID(id, cur)
 
 	switch err {
 	case nil:
 
 	case data.ErrProductNotFound:
-		p.l.Println("[ERROR] fetching product", err)
+		p.l.Debug(" fetching product", err)
 
 		rw.WriteHeader(http.StatusNotFound)
 		data.ToJSON(&GenericError{Message: err.Error()}, rw)
 		return
 	default:
-		p.l.Println("[ERROR] fetching product", err)
+		p.l.Debug(" fetching product", err)
 
 		rw.WriteHeader(http.StatusInternalServerError)
 		data.ToJSON(&GenericError{Message: err.Error()}, rw)
 		return
 	}
-
 	err = data.ToJSON(prod, rw)
 	if err != nil {
 		// we should never be here but log the error just incase
-		p.l.Println("[ERROR] serializing product", err)
+		p.l.Debug("erializing product", err)
 	}
 }

@@ -1,0 +1,12 @@
+{
+    "configurations": [
+    {
+        "name": "Launch file",
+        "type": "go",
+        "request": "launch",
+        "mode": "debug",
+        "program": "/Users/alex/go_projs/micro-service/my-simple-server/main.go"
+    }
+    ]
+ 
+}

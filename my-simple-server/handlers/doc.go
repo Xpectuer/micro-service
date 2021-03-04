@@ -1,10 +1,21 @@
+package handlers
+
+/*
+ * @Author: alex
+ * @Date: 2020-12-28 23:52:14
+ * @LastEditTime: 2021-01-21 16:04:45
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: /micro-service/my-simple-server/handlers/doc.go
+ */
+
 // Package classification of Product API
 //
 // Documentation for Product API
 //
 //	Schemes: http
 //	BasePath: /
-//	Version: 1.0.0
+//	Version: 1.0.1
 //
 //	Consumes:
 //	- application/json
@@ -13,7 +24,6 @@
 //	- application/json
 //
 // swagger:meta
-package handlers
 
 import "github.com/Xpectuer/micro-service/my-simple-server/data"
 
@@ -65,6 +75,15 @@ type productParamsWrapper struct {
 	// in: body
 	// required: true
 	Body data.Product
+}
+
+// swagger:parameters listProducts listSingleProduct
+type productQueryParam struct {
+	// Currency used when returning the price of the product.
+	// when not specify currency is returned in GBP
+	// in: query
+	// required: false
+	Currency string
 }
 
 // swagger:parameters ListSingleProduct DeleteProduct
